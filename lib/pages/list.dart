@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app_tutorial/pages/home_page.dart';
+import 'package:weather_app/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ListPage extends StatefulWidget {
