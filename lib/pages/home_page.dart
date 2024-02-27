@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:weather/weather.dart';
 import 'package:weather_app/consts.dart';
@@ -20,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   final WeatherFactory _wf = WeatherFactory(OPENWEATHER_API_KEY);
 
   Weather? _weather;
+  List<Weather>? _weatherFiveDay;
 
   @override
   void initState() {
@@ -27,6 +30,24 @@ class _HomePageState extends State<HomePage> {
     _wf.currentWeatherByCityName(widget.nome).then((w) {
       setState(() {
         _weather = w;
+      });
+    });
+
+    _wf.fiveDayForecastByCityName(widget.nome).then((wfive) {
+      List<Weather> midnightWeatherList = [];
+
+      for (Weather weatherEntry in wfive) {
+        DateTime? timestamp = weatherEntry.date;
+
+        if (timestamp?.hour == 0 &&
+            timestamp?.minute == 0 &&
+            timestamp?.second == 0) {
+          midnightWeatherList.add(weatherEntry);
+        }
+      }
+
+      setState(() {
+        _weatherFiveDay = midnightWeatherList;
       });
     });
   }
@@ -39,7 +60,7 @@ class _HomePageState extends State<HomePage> {
         preferredSize: Size.fromHeight(50.0),
         child: AppBar(
           backgroundColor: const Color.fromARGB(255, 82, 107, 119),
-          automaticallyImplyLeading: false, // Disable automatic leading widget
+          automaticallyImplyLeading: false,
           leading: Padding(
             padding: const EdgeInsets.only(
                 left: 16.0), // Adjust left padding if needed
@@ -47,7 +68,7 @@ class _HomePageState extends State<HomePage> {
             child: IconButton(
               icon: Icon(
                 Icons.arrow_back,
-                color: Colors.white, // Change this to your desired arrow color
+                color: Colors.white,
               ),
               onPressed: () {
                 Navigator.pop(context);
@@ -55,12 +76,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           title: Align(
-            alignment: Alignment(-0.25, 2),
+            alignment: Alignment(-0.25, 1),
             child: Text(
               widget.nome,
               style: GoogleFonts.aleo(
                 textStyle: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
                 ),
@@ -92,17 +113,76 @@ class _HomePageState extends State<HomePage> {
         children: [
           _dateTimeInfo(),
           SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.05,
+            height: MediaQuery.sizeOf(context).height * 0.02,
           ),
           _weatherIcon(),
           SizedBox(
             height: MediaQuery.sizeOf(context).height * 0.02,
           ),
           _currentTemp(),
-          SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.02,
-          ),
           _extraInfo(),
+          Container(
+            height: 170,
+            padding: EdgeInsets.only(left: 28, right: 28, top: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _weatherFiveDay?.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: Container(
+                    width: 100,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 3,
+                        ),
+                        Text(
+                          '${_weatherFiveDay?[index].temperature?.celsius?.toStringAsFixed(0)}° C',
+                          style: GoogleFonts.aleo(
+                            // Use GoogleFonts widget
+                            textStyle: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: 70,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                  "http://openweathermap.org/img/wn/${_weatherFiveDay?[index].weatherIcon}@4x.png"),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          _weatherFiveDay?[index].date != null
+                              ? DateFormat('dd/MM')
+                                  .format(_weatherFiveDay![index].date!)
+                              : 'N/A',
+                          style: GoogleFonts.aleo(
+                            // Use GoogleFonts widget
+                            textStyle: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -126,18 +206,8 @@ class _HomePageState extends State<HomePage> {
     DateTime now = _weather!.date!;
     return Column(
       children: [
-        Text(
-          DateFormat("h:mm a").format(now),
-          style: GoogleFonts.aleo(
-            // Use GoogleFonts widget
-            textStyle: const TextStyle(
-              fontSize: 35,
-              color: Colors.white,
-            ),
-          ),
-        ),
         const SizedBox(
-          height: 10,
+          height: 50,
         ),
         Row(
           mainAxisSize: MainAxisSize.max,
@@ -149,12 +219,23 @@ class _HomePageState extends State<HomePage> {
               style: GoogleFonts.aleo(
                 // Use GoogleFonts widget
                 textStyle: const TextStyle(
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
               ),
             ),
           ],
+        ),
+        Text(
+          DateFormat("h:mm a").format(now),
+          style: GoogleFonts.aleo(
+            // Use GoogleFonts widget
+            textStyle: const TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+            ),
+          ),
         ),
       ],
     );
@@ -167,7 +248,7 @@ class _HomePageState extends State<HomePage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          height: MediaQuery.sizeOf(context).height * 0.20,
+          height: MediaQuery.sizeOf(context).height * 0.17,
           decoration: BoxDecoration(
             image: DecorationImage(
               image: NetworkImage(
@@ -196,7 +277,7 @@ class _HomePageState extends State<HomePage> {
         // Use GoogleFonts widget
         textStyle: const TextStyle(
           color: Colors.white,
-          fontSize: 90,
+          fontSize: 70,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -206,7 +287,7 @@ class _HomePageState extends State<HomePage> {
   Widget _extraInfo() {
     return Container(
       height: MediaQuery.sizeOf(context).height * 0.15,
-      width: MediaQuery.sizeOf(context).width * 0.80,
+      width: MediaQuery.sizeOf(context).width * 0.85,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(

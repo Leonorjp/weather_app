@@ -194,7 +194,6 @@ class _ListPageState extends State<ListPage> {
                 });
               },
               decoration: InputDecoration(
-                fillColor: Colors.red,
                 labelText: 'Search',
                 hintText: 'Enter a city name',
                 prefixIcon: Icon(Icons.search, color: Colors.white),
